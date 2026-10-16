@@ -27,7 +27,8 @@ name = "vk_sync"
 path = "src/lib.rs"
 
 [dependencies]
-ash = { version = "0.29", optional = true }
+# Use the vendored ash copy instead of crates.io.
+ash = { path = "../ash/ash", optional = true }
 
 [features]
 default = ["ash_bind"]

@@ -27,9 +27,6 @@ pub enum AccessType {
 	/// No access. Useful primarily for initialization
 	Nothing,
 
-	/// Command buffer read operation as defined by `NVX_device_generated_commands`
-	CommandBufferReadNVX,
-
 	/// Read as an indirect buffer for drawing or dispatch
 	IndirectBuffer,
 
@@ -125,9 +122,6 @@ pub enum AccessType {
 
 	/// Read by the presentation engine (i.e. `vkQueuePresentKHR`)
 	Present,
-
-	/// Command buffer write operation as defined by `NVX_device_generated_commands`
-	CommandBufferWriteNVX,
 
 	/// Written as any resource in a vertex shader
 	VertexShaderWrite,
@@ -286,12 +280,12 @@ pub struct ImageBarrier<'a> {
 /// Mapping function that translates a global barrier into a set of source and
 /// destination pipeline stages, and a memory barrier, that can be used with
 /// Vulkan synchronization methods.
-pub fn get_memory_barrier(
-	barrier: &GlobalBarrier,
+pub fn get_memory_barrier<'a>(
+	barrier: &GlobalBarrier<'a>,
 ) -> (
 	ash::vk::PipelineStageFlags,
 	ash::vk::PipelineStageFlags,
-	ash::vk::MemoryBarrier,
+	ash::vk::MemoryBarrier<'a>,
 ) {
 	let mut src_stages = ash::vk::PipelineStageFlags::empty();
 	let mut dst_stages = ash::vk::PipelineStageFlags::empty();
@@ -337,12 +331,12 @@ pub fn get_memory_barrier(
 /// Mapping function that translates a buffer barrier into a set of source and
 /// destination pipeline stages, and a buffer memory barrier, that can be used
 /// with Vulkan synchronization methods.
-pub fn get_buffer_memory_barrier(
-	barrier: &BufferBarrier,
+pub fn get_buffer_memory_barrier<'a>(
+	barrier: &BufferBarrier<'a>,
 ) -> (
 	ash::vk::PipelineStageFlags,
 	ash::vk::PipelineStageFlags,
-	ash::vk::BufferMemoryBarrier,
+	ash::vk::BufferMemoryBarrier<'a>,
 ) {
 	let mut src_stages = ash::vk::PipelineStageFlags::empty();
 	let mut dst_stages = ash::vk::PipelineStageFlags::empty();
@@ -395,12 +389,12 @@ pub fn get_buffer_memory_barrier(
 /// Mapping function that translates an image barrier into a set of source and
 /// destination pipeline stages, and an image memory barrier, that can be used
 /// with Vulkan synchronization methods.
-pub fn get_image_memory_barrier(
-	barrier: &ImageBarrier,
+pub fn get_image_memory_barrier<'a>(
+	barrier: &ImageBarrier<'a>,
 ) -> (
 	ash::vk::PipelineStageFlags,
 	ash::vk::PipelineStageFlags,
-	ash::vk::ImageMemoryBarrier,
+	ash::vk::ImageMemoryBarrier<'a>,
 ) {
 	let mut src_stages = ash::vk::PipelineStageFlags::empty();
 	let mut dst_stages = ash::vk::PipelineStageFlags::empty();
@@ -498,11 +492,6 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
 		AccessType::Nothing => AccessInfo {
 			stage_mask: ash::vk::PipelineStageFlags::empty(),
 			access_mask: ash::vk::AccessFlags::empty(),
-			image_layout: ash::vk::ImageLayout::UNDEFINED,
-		},
-		AccessType::CommandBufferReadNVX => AccessInfo {
-			stage_mask: ash::vk::PipelineStageFlags::COMMAND_PROCESS_NVX,
-			access_mask: ash::vk::AccessFlags::COMMAND_PROCESS_READ_NVX,
 			image_layout: ash::vk::ImageLayout::UNDEFINED,
 		},
 		AccessType::IndirectBuffer => AccessInfo {
@@ -669,11 +658,6 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
 			access_mask: ash::vk::AccessFlags::empty(),
 			image_layout: ash::vk::ImageLayout::PRESENT_SRC_KHR,
 		},
-		AccessType::CommandBufferWriteNVX => AccessInfo {
-			stage_mask: ash::vk::PipelineStageFlags::COMMAND_PROCESS_NVX,
-			access_mask: ash::vk::AccessFlags::COMMAND_PROCESS_WRITE_NVX,
-			image_layout: ash::vk::ImageLayout::UNDEFINED,
-		},
 		AccessType::VertexShaderWrite => AccessInfo {
 			stage_mask: ash::vk::PipelineStageFlags::VERTEX_SHADER,
 			access_mask: ash::vk::AccessFlags::SHADER_WRITE,
@@ -760,7 +744,6 @@ pub(crate) fn get_access_info(access_type: AccessType) -> AccessInfo {
 
 pub(crate) fn is_write_access(access_type: AccessType) -> bool {
 	match access_type {
-		AccessType::CommandBufferWriteNVX => true,
 		AccessType::VertexShaderWrite => true,
 		AccessType::TessellationControlShaderWrite => true,
 		AccessType::TessellationEvaluationShaderWrite => true,

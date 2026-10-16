@@ -7,7 +7,7 @@ use ash;
 /// barriers to be passed to `vkCmdPipelineBarrier`.
 /// `command_buffer` is passed unmodified to `vkCmdPipelineBarrier`.
 pub fn pipeline_barrier(
-	device: &ash::vk::DeviceFnV1_0,
+	device: &ash::Device,
 	command_buffer: ash::vk::CommandBuffer,
 	global_barrier: Option<GlobalBarrier>,
 	buffer_barriers: &[BufferBarrier],
@@ -17,10 +17,10 @@ pub fn pipeline_barrier(
 	let mut dst_stage_mask = ash::vk::PipelineStageFlags::BOTTOM_OF_PIPE;
 
 	// TODO: Optimize out the Vec heap allocations
-	let mut vk_memory_barriers: Vec<ash::vk::MemoryBarrier> = Vec::with_capacity(1);
-	let mut vk_buffer_barriers: Vec<ash::vk::BufferMemoryBarrier> =
+	let mut vk_memory_barriers: Vec<ash::vk::MemoryBarrier<'_>> = Vec::with_capacity(1);
+	let mut vk_buffer_barriers: Vec<ash::vk::BufferMemoryBarrier<'_>> =
 		Vec::with_capacity(buffer_barriers.len());
-	let mut vk_image_barriers: Vec<ash::vk::ImageMemoryBarrier> =
+	let mut vk_image_barriers: Vec<ash::vk::ImageMemoryBarrier<'_>> =
 		Vec::with_capacity(image_barriers.len());
 
 	// Global memory barrier
@@ -53,12 +53,9 @@ pub fn pipeline_barrier(
 			src_stage_mask,
 			dst_stage_mask,
 			ash::vk::DependencyFlags::empty(),
-			vk_memory_barriers.len() as u32,
-			vk_memory_barriers.as_ptr(),
-			vk_buffer_barriers.len() as u32,
-			vk_buffer_barriers.as_ptr(),
-			vk_image_barriers.len() as u32,
-			vk_image_barriers.as_ptr(),
+			&vk_memory_barriers,
+			&vk_buffer_barriers,
+			&vk_image_barriers,
 		);
 	}
 }
@@ -67,7 +64,7 @@ pub fn pipeline_barrier(
 /// Sets an event when the accesses defined by `previous_accesses` are completed.
 /// `command_buffer` and `event` are passed unmodified to `vkCmdSetEvent`.
 pub fn set_event(
-	device: &ash::vk::DeviceFnV1_0,
+	device: &ash::Device,
 	command_buffer: ash::vk::CommandBuffer,
 	event: ash::vk::Event,
 	previous_accesses: &[AccessType],
@@ -87,7 +84,7 @@ pub fn set_event(
 /// Resets an event when the accesses defined by `previous_accesses` are completed.
 /// `command_buffer` and `event` are passed unmodified to `vkCmdResetEvent`.
 pub fn reset_event(
-	device: &ash::vk::DeviceFnV1_0,
+	device: &ash::Device,
 	command_buffer: ash::vk::CommandBuffer,
 	event: ash::vk::Event,
 	previous_accesses: &[AccessType],
@@ -106,11 +103,11 @@ pub fn reset_event(
 /// Simplified wrapper around `vkCmdWaitEvents`.
 /// The mapping functions defined above are used to translate the passed in
 /// barrier definitions into a set of pipeline stages and native Vulkan memory
-/// barriers to be passed to `vkCmdPipelineBarrier`.
+/// barriers to be passed to `vkCmdWaitEvents`.
 ///
 /// `commandBuffer` and `events` are passed unmodified to `vkCmdWaitEvents`.
 pub fn wait_events(
-	device: &ash::vk::DeviceFnV1_0,
+	device: &ash::Device,
 	command_buffer: ash::vk::CommandBuffer,
 	events: &[ash::vk::Event],
 	global_barrier: Option<GlobalBarrier>,
@@ -121,10 +118,10 @@ pub fn wait_events(
 	let mut dst_stage_mask = ash::vk::PipelineStageFlags::BOTTOM_OF_PIPE;
 
 	// TODO: Optimize out the Vec heap allocations
-	let mut vk_memory_barriers: Vec<ash::vk::MemoryBarrier> = Vec::with_capacity(1);
-	let mut vk_buffer_barriers: Vec<ash::vk::BufferMemoryBarrier> =
+	let mut vk_memory_barriers: Vec<ash::vk::MemoryBarrier<'_>> = Vec::with_capacity(1);
+	let mut vk_buffer_barriers: Vec<ash::vk::BufferMemoryBarrier<'_>> =
 		Vec::with_capacity(buffer_barriers.len());
-	let mut vk_image_barriers: Vec<ash::vk::ImageMemoryBarrier> =
+	let mut vk_image_barriers: Vec<ash::vk::ImageMemoryBarrier<'_>> =
 		Vec::with_capacity(image_barriers.len());
 
 	// Global memory barrier
@@ -154,16 +151,12 @@ pub fn wait_events(
 	unsafe {
 		device.cmd_wait_events(
 			command_buffer,
-			events.len() as u32,
-			events.as_ptr(),
+			events,
 			src_stage_mask,
 			dst_stage_mask,
-			vk_memory_barriers.len() as u32,
-			vk_memory_barriers.as_ptr(),
-			vk_buffer_barriers.len() as u32,
-			vk_buffer_barriers.as_ptr(),
-			vk_image_barriers.len() as u32,
-			vk_image_barriers.as_ptr(),
+			&vk_memory_barriers,
+			&vk_buffer_barriers,
+			&vk_image_barriers,
 		);
 	}
 }

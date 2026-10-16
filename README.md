@@ -9,6 +9,8 @@ vk-sync
 
 Simplified Vulkan synchronization logic, written in rust.
 
+> **Fork note:** this copy contains local modifications (ported to the vendored ash 0.38) — see [FORK_CHANGES.md](FORK_CHANGES.md).
+
 - [Documentation](https://docs.rs/vk-sync)
 - [Release Notes](https://github.com/gwihlidal/vk-sync-rs/releases)
 
